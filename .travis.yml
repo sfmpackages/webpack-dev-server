@@ -2,20 +2,14 @@ language: node_js
 
 jobs:
   fast_finish: true
+
   include:
     - stage: Lint
       env: SCRIPT=lint
       node_js: 'stable'
-    - &linux
-      stage: Test (Linux)
-      env: SCRIPT=test
-      node_js: 'stable'
-    - <<: *linux
-      node_js: 'lts/*'
-    - <<: *linux
-      node_js: 6
+
     - &osx
-      stage: Test (MacOS)
+      stage: Test
       os: 'osx'
       env: SCRIPT=test
       node_js: 'stable'
@@ -24,15 +18,38 @@ jobs:
     - <<: *osx
       node_js: 6
 
+    - &linux
+      stage: Test
+      env: SCRIPT=test
+      node_js: 'stable'
+    - <<: *linux
+      node_js: 'lts/*'
+    - <<: *linux
+      node_js: 6
+
+    - &windows
+      stage: Test
+      os: 'windows'
+      env: SCRIPT=test
+      node_js: 'latest'
+    - <<: *windows
+      node_js: 'lts'
+    - <<: *windows
+      node_js: 6
+
 install:
-  - npm i -g npm@latest
+  - if [[ "$TRAVIS_OS_NAME" != 'windows' ]]; then
+      npm i -g npm@latest;
+    fi
   - npm i
 
 script: npm run $SCRIPT
 
 after_success:
-  - npm i codecov
-  - $(npm bin)/codecov
+  - if [[ "$TRAVIS_OS_NAME" == 'linux' ]]; then
+      npm i codecov;
+      $(npm bin)/codecov;
+    fi
 
 notifications:
   email: false
